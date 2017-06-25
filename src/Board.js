@@ -10,28 +10,33 @@ import './Board.css';
 class Board extends Component {
     constructor({ n }) {
         super();
-        this.state = {
-            squares: Array(n).fill(0).map(() => Array(n).fill(0)),
-            playerTurn: true
-        };
-        // console.log(this.state.squares,'n')
+        if (n >= 5 && typeof n === 'number') {
+            this.state = {
+                squares: Array(n).fill(0).map(() => Array(n).fill(0)),
+                playerTurn: true
+            };
+        } else {
+            throw new Error('Board\'s width can\'t be less than 5');
+        }
+        this.board = this.state.squares;
     }
-    getCell(board,col,row) {
-        return board[col][row];
+
+    getCell(col,row) {
+        return this.board[col][row];
     }
     equalElements(arr) {
         return !arr.some((val, i, arr) => {
             return val !== arr[0];
         });
     }
-    isWinner(board) {
+    isWinner() {
         let winner = false;
-        const boardWidth = board.length;
+        const boardWidth = this.board.length;
         // rows
         for (let i = 0; i < boardWidth; i++) {
             // const [a,b,c] = board[i];
             // if ((a !== 0 && b !== 0 && c !== 0) && (a == b == c)) return 'equal';
-            let row = board[i];
+            let row = this.board[i];
             if (this.equalElements(row) && row[i] !== 0) {
                 winner = row[i];
                 return winner;
@@ -41,7 +46,7 @@ class Board extends Component {
         for (let i = 0; i < boardWidth; i++) {
             let col = [];
             for (let j = 0; j < boardWidth; j++) {
-                col.push(this.getCell(board,j,i));
+                col.push(this.getCell(j,i));
             }
             if (this.equalElements(col) && col[i] !== 0) {
                 winner = col[i];
@@ -49,22 +54,35 @@ class Board extends Component {
             }
         }
         // diagonals?
+        let diagonals = {first: [], second: []};
+        for (let i = 0; i < boardWidth; i++) {
+            diagonals.first.push(this.getCell(i,i));
+            diagonals.second.push(this.getCell(boardWidth - i - 1, i))
+        }
+        for (let key in diagonals) {
+            let val = diagonals[key];
+            if (this.equalElements(val) && val[0] !== 0) {
+                winner = val[0];
+                return winner;
+            }
+        }
         // tie?
     }
     move(col, row) {
-        // console.log(`Move to ${col}, ${row}`);
-        const squares = this.state.squares;
-        const winner = this.isWinner(squares);
-        if (squares[col][row] !== 0) return;
-        squares[col][row] = this.state.playerTurn ? 1 : 2;
-        this.setState({squares: squares, playerTurn: !this.state.playerTurn}, () => {
-            const where = findWhere(squares);
+        console.log(`Move to ${col}, ${row}`);
+        // const squares = this.state.squares;
+        const winner = this.isWinner(this.board);
+        let certainCell = this.getCell(col,row);
+        if (certainCell !== 0) return;
+        this.board[col][row] = this.state.playerTurn ? 1 : 2;
+        this.setState({squares: this.board, playerTurn: !this.state.playerTurn}, () => {
+            const where = findWhere(this.board);
             if (where === null || winner) {
                 setTimeout(() => console.log('end'));
             } else {
                 if (!this.state.playerTurn) {
-
-                    this.move(...where);
+                    // AI turn
+                    setTimeout(() => this.move(...where), 500);
                 }
             }
             // console.log('clicked!', squares, 'squares');
@@ -84,8 +102,8 @@ class Board extends Component {
 
     render() {
         let caption = 'Still no winner';
-        if (this.isWinner(this.state.squares) !== undefined) {
-            if (this.isWinner(this.state.squares) === 1) {
+        if (this.isWinner(this.board) !== undefined) {
+            if (this.isWinner(this.board) === 1) {
                 caption = 'Winner X';
             } else {
                 caption = 'Winner O';
@@ -96,7 +114,7 @@ class Board extends Component {
             <div>
                 {/*<div>{this.AILogic()}</div>*/}
                 <div className='caption'>{caption}</div>
-                <div className='lines'>{this.state.squares.map((line, col) => {
+                <div className='lines'>{this.board.map((line, col) => {
                     return (
                         <div>
                             {line.map((cell, row) => {
