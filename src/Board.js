@@ -71,18 +71,18 @@ class Board extends Component {
     move(col, row) {
         console.log(`Move to ${col}, ${row}`);
         // const squares = this.state.squares;
-        const winner = this.isWinner(this.board);
+        this.winner = this.isWinner(this.board);
         let certainCell = this.getCell(col,row);
         if (certainCell !== 0) return;
         this.board[col][row] = this.state.playerTurn ? 1 : 2;
         this.setState({squares: this.board, playerTurn: !this.state.playerTurn}, () => {
             const where = findWhere(this.board);
-            if (where === null || winner) {
+            if (where === null || this.winner) {
                 setTimeout(() => console.log('end'));
             } else {
                 if (!this.state.playerTurn) {
-                    // AI turn
-                    setTimeout(() => this.move(...where), 500);
+                    // AI turn with a slight delay
+                    setTimeout(() => this.move(...where), 100);
                 }
             }
             // console.log('clicked!', squares, 'squares');
@@ -93,17 +93,13 @@ class Board extends Component {
             val = {i}
             col = {col}
             row = {row}
-            onClick = {(col, row) => this.move(col, row)}
+            onClick = {(col, row) => this.winner === undefined ? this.move(col, row) : null}
         />;
     }
-    // AILogic() {
-    //     return <AILogic funcPlayerTurn = {this.state.playerTurn} />;
-    // }
-
     render() {
         let caption = 'Still no winner';
-        if (this.isWinner(this.board) !== undefined) {
-            if (this.isWinner(this.board) === 1) {
+        if (this.winner !== undefined) {
+            if (this.winner === 1) {
                 caption = 'Winner X';
             } else {
                 caption = 'Winner O';
@@ -112,13 +108,11 @@ class Board extends Component {
 
         return (
             <div>
-                {/*<div>{this.AILogic()}</div>*/}
                 <div className='caption'>{caption}</div>
                 <div className='lines'>{this.board.map((line, col) => {
                     return (
                         <div>
                             {line.map((cell, row) => {
-                                // console.log(cell, 'i');
                                 return this.renderSquare(col, row, cell)
                             })}
                         </div>
